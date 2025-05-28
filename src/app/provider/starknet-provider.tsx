@@ -1,13 +1,14 @@
 "use client";
-import { InjectedConnector } from "starknetkit/injected";
-import { WebWalletConnector } from "starknetkit/webwallet";
+
+import React from "react";
 import { mainnet, sepolia } from "@starknet-react/chains";
 import {
-  Connector,
+  StarknetConfig,
   voyager,
   publicProvider,
-  StarknetConfig,
 } from "@starknet-react/core";
+import { InjectedConnector } from "starknetkit/injected";
+import { WebWalletConnector } from "starknetkit/webwallet";
 
 const connectors = [
   new InjectedConnector({
@@ -19,16 +20,16 @@ const connectors = [
   new WebWalletConnector({ url: "https://web.argent.xyz" }),
 ];
 
-export default function StarknetProvider({
-  children,
-}: {
+type StarknetProviderProps = {
   children: React.ReactNode;
-}) {
+};
+
+export default function StarknetProvider({ children }: StarknetProviderProps) {
   return (
     <StarknetConfig
       chains={[mainnet, sepolia]}
       provider={publicProvider()}
-      connectors={connectors as Connector[]}
+      connectors={connectors}
       explorer={voyager}
     >
       {children}
