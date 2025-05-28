@@ -340,6 +340,9 @@ export default function Home() {
       }
 
       console.log("Vault: ", vault);
+      const rpcProvider = new RpcProvider({
+        nodeUrl: "https://starknet-sepolia.public.blastapi.io",
+      });
 
       const balance = await vault.getBalance("0x00d5944409b0e99d8671207c1a1f8db223a258f2effa29efdf2cbddf0a85d1b1");
       console.log("Balance: ", balance);
@@ -363,6 +366,11 @@ export default function Home() {
         },
       });
       console.log("tx: ", txH);
+      const txR = await rpcProvider.waitForTransaction(txH);
+      if (txR.isSuccess()) {
+        console.log("Paid fee =", txR.actual_fee);
+        console.log("events: ", txR.events);
+      }
 
 
 
