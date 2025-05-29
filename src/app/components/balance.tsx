@@ -1,7 +1,7 @@
 "use client";
 
-import { Skeleton } from "@heroui/react";
 import { useBalance } from "@starknet-react/core";
+import { Skeleton } from "@radix-ui/themes";
 
 interface GetBalanceProps {
   address?: string | null;
@@ -24,7 +24,7 @@ export default function Balance({ address }: GetBalanceProps) {
       <div className="text-gray-600 text-sm mb-2">Balance</div>
       <div className="text-2xl font-semibold flex items-center justify-center mb-4">
         {isLoading ? (
-          <Skeleton className="w-24 h-6" />
+          <Skeleton width="140px" height="30px" className="rounded-lg" />
         ) : (
           <div className="flex items-center gap-2">
             {data?.formatted || "0.00"}

@@ -6,7 +6,15 @@ import { useAccount, useDisconnect, useNetwork } from "@starknet-react/core";
 import { WalletConnectorModal } from "./components/wallet";
 import { getShortAddress } from "./utils/getShortAddress";
 
-import { RpcProvider, Contract, constants, num, Abi, CallData, cairo } from "starknet";
+import {
+  RpcProvider,
+  Contract,
+  constants,
+  num,
+  Abi,
+  CallData,
+  cairo,
+} from "starknet";
 import Balance from "./components/balance";
 import Link from "next/link";
 
@@ -71,10 +79,11 @@ function DepositForm({
           onChange={handleAmountChange}
           min="0"
           step="any"
-          className={`w-full py-4 px-6 text-lg border-2 rounded-xl focus:outline-none transition-colors ${amountError
+          className={`w-full py-4 px-6 text-lg border-2 rounded-xl focus:outline-none transition-colors ${
+            amountError
               ? "border-red-500 focus:border-red-500"
               : "border-gray-300 focus:border-blue-500"
-            }`}
+          }`}
           placeholder="Enter amount"
         />
         {amountError && (
@@ -86,10 +95,11 @@ function DepositForm({
       <button
         onClick={handleConfirm}
         disabled={!!amountError || !amount || parseFloat(amount) <= 0}
-        className={`w-auto px-8 py-3 rounded-xl font-medium transition-colors float-right ${amountError || !amount || parseFloat(amount) <= 0
+        className={`w-auto px-8 py-3 rounded-xl font-medium transition-colors float-right ${
+          amountError || !amount || parseFloat(amount) <= 0
             ? "bg-gray-400 text-gray-200 cursor-not-allowed"
             : "bg-gray-800 text-white hover:bg-gray-700"
-          }`}
+        }`}
       >
         {isLoading ? "Confirming..." : "Confirm"}
       </button>
@@ -105,6 +115,12 @@ interface WithdrawFormProps {
   setAmount: (amount: string) => void;
   onConfirm: () => void;
 }
+type RequestWithdraw = {
+  sender: string;
+  recipient: string;
+  amount: string;
+  status: string; // pending | finish  | check
+};
 
 function WithdrawForm({
   recipient,
@@ -115,6 +131,17 @@ function WithdrawForm({
 }: WithdrawFormProps) {
   const { address } = useAccount();
   const [recipientError, setRecipientError] = useState("");
+  const [expandedCards, setExpandedCards] = useState<{
+    [key: number]: boolean;
+  }>({});
+  const [withdrawRequests, setWithdrawRequests] = useState<RequestWithdraw[]>([
+    {
+      sender: "0x1",
+      recipient: "0x2",
+      amount: "11",
+      status: "pending",
+    },
+  ]);
 
   const handleRecipientChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -145,6 +172,13 @@ function WithdrawForm({
     onConfirm();
   };
 
+  const toggleCard = (index: number) => {
+    setExpandedCards((prev) => ({
+      ...prev,
+      [index]: !prev[index],
+    }));
+  };
+
   return (
     <>
       <div className="mb-6">
@@ -158,10 +192,11 @@ function WithdrawForm({
           type="text"
           value={recipient}
           onChange={handleRecipientChange}
-          className={`w-full py-4 px-6 text-lg border-2 rounded-xl focus:outline-none transition-colors ${recipientError
+          className={`w-full py-4 px-6 text-lg border-2 rounded-xl focus:outline-none transition-colors ${
+            recipientError
               ? "border-red-500 focus:border-red-500"
               : "border-gray-300 focus:border-blue-500"
-            }`}
+          }`}
           placeholder="0x... (leave empty to withdraw to yourself)"
         />
         {recipientError && (
@@ -185,15 +220,111 @@ function WithdrawForm({
           placeholder="Enter amount"
         />
       </div>
+      {/* Request Withdraw Card  */}
+      {/* Request Withdraw Card  */}
+      {withdrawRequests.length > 0 &&
+        withdrawRequests.map((requestWithdraw, index) => (
+          <div
+            key={index}
+            className="mb-6 p-4 bg-white border-2 border-gray-200 rounded-xl"
+          >
+            <div
+              className="flex justify-between items-center cursor-pointer"
+              onClick={() => toggleCard(index)}
+            >
+              <h3 className="text-lg font-medium text-gray-800">
+                Withdraw Request #{index + 1}
+              </h3>
+              <button className="text-gray-500 hover:text-gray-700 transition-colors">
+                {expandedCards[index] ? (
+                  <svg
+                    className="w-5 h-5 transform rotate-180"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                ) : (
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                )}
+              </button>
+            </div>
+            {expandedCards[index] && (
+              <div className="mt-3 space-y-2 border-t border-gray-100 pt-3">
+                {requestWithdraw.sender && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Sender:</span>
+                    <span className="font-mono text-sm">
+                      {getShortAddress(requestWithdraw.sender)}
+                    </span>
+                  </div>
+                )}
+                {requestWithdraw.recipient && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Recipient:</span>
+                    <span className="font-mono text-sm">
+                      {getShortAddress(requestWithdraw.recipient)}
+                    </span>
+                  </div>
+                )}
+                {requestWithdraw.amount && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Amount:</span>
+                    <span className="font-medium">
+                      {requestWithdraw.amount}
+                    </span>
+                  </div>
+                )}
+                {requestWithdraw.status && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Status:</span>
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        requestWithdraw.status === "pending"
+                          ? "bg-yellow-100 text-yellow-800"
+                          : requestWithdraw.status === "finish"
+                          ? "bg-green-100 text-green-800"
+                          : requestWithdraw.status === "check"
+                          ? "bg-blue-100 text-blue-800"
+                          : "bg-gray-100 text-gray-800"
+                      }`}
+                    >
+                      {requestWithdraw.status}
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        ))}
 
       {/* Confirm Button */}
       <button
         onClick={handleConfirm}
         disabled={!!recipientError || !amount || parseFloat(amount) <= 0}
-        className={`w-auto px-8 py-3 rounded-xl font-medium transition-colors float-right ${recipientError || !amount || parseFloat(amount) <= 0
+        className={`w-auto px-8 py-3 rounded-xl font-medium transition-colors float-right ${
+          recipientError || !amount || parseFloat(amount) <= 0
             ? "bg-gray-400 text-gray-200 cursor-not-allowed"
             : "bg-gray-800 text-white hover:bg-gray-700"
-          }`}
+        }`}
       >
         Confirm
       </button>
@@ -207,7 +338,7 @@ export default function Home() {
   const maxQtyGasAuthorized = 180000;
   const maxPriceAuthorizeForOneGas = 10 ** 15;
 
-  const { address, account } = useAccount();
+  const { address, account, isConnected } = useAccount();
   const { disconnect } = useDisconnect();
   const { chain } = useNetwork();
 
@@ -293,18 +424,21 @@ export default function Home() {
       const multiCall = await account.execute([
         // Calling the first contract
         {
-          contractAddress: "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d",
-          entrypoint: 'approve',
+          contractAddress:
+            "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d",
+          entrypoint: "approve",
           // approve 1 wei for bridge
           calldata: CallData.compile({
-            spender: "0x05f0f718e8ae8356b800001104e840ba2384e413f5b1567b55dc457c044a75d9",
+            spender:
+              "0x05f0f718e8ae8356b800001104e840ba2384e413f5b1567b55dc457c044a75d9",
             amount: cairo.uint256(amount),
           }),
         },
         // Calling the second contract
         {
-          contractAddress: "0x05f0f718e8ae8356b800001104e840ba2384e413f5b1567b55dc457c044a75d9",
-          entrypoint: 'deposit',
+          contractAddress:
+            "0x05f0f718e8ae8356b800001104e840ba2384e413f5b1567b55dc457c044a75d9",
+          entrypoint: "deposit",
           // transfer 1 wei to the contract address
           calldata: CallData.compile({
             amount: cairo.uint256(amount),
@@ -347,8 +481,6 @@ export default function Home() {
       //   console.log("events: ", txR.events);
       // }
 
-
-
       setIsLoadingDeposit(false);
 
       //  call deposit
@@ -357,7 +489,7 @@ export default function Home() {
     }
   };
 
-  if (!address)
+  if (!isConnected)
     return (
       <div className="flex items-center justify-center min-h-screen">
         <WalletConnectorModal />
@@ -366,23 +498,18 @@ export default function Home() {
 
   return (
     <div className="min-h-screen  flex items-center justify-center p-4">
-      <div className="bg-gray-50 rounded-3xl shadow-lg p-8 w-full max-w-md">
-        {/* Header with address and buttons */}
-        <div className="flex items-center justify-between mb-8">
+      <div className="bg-gray-50 rounded-3xl shadow-lg p-4 w-full max-w-md">
+        <div className="flex items-center justify-between mb-8 ">
           <div className="flex-1">
             <span className="text-gray-600 text-sm">address</span>
             <div className="font-mono text-sm mt-1">
-              {getShortAddress(address)}
+              {getShortAddress(address || "")}
             </div>
           </div>
-          <div className="flex gap-2 ml-4">
-            <button
-              onClick={handleCopy}
-              className="p-2 border-2 border-gray-300 rounded-lg hover:bg-gray-50 hover:border-gray-400 hover:shadow-md transform hover:scale-105 transition-all duration-200 cursor-pointer"
-              title="Copy address"
-            >
-              <Link href={"/fund"}>Phase seed</Link>
-            </button>
+          <div className="flex gap-2 items-center">
+            <Link href={"/faciet"} className="hover:underline">
+              Faciet
+            </Link>
             <button
               onClick={handleCopy}
               className="p-2 border-2 border-gray-300 rounded-lg hover:bg-gray-50 hover:border-gray-400 hover:shadow-md transform hover:scale-105 transition-all duration-200 cursor-pointer"
@@ -408,19 +535,21 @@ export default function Home() {
         <div className="flex gap-2 mb-6">
           <button
             onClick={() => setActiveTab("deposit")}
-            className={`flex-1 py-3 px-6 rounded-xl font-medium transition-all duration-200 cursor-pointer transform hover:scale-105 hover:shadow-md ${activeTab === "deposit"
+            className={`flex-1 py-3 px-6 rounded-xl font-medium transition-all duration-200 cursor-pointer transform hover:scale-105 hover:shadow-md ${
+              activeTab === "deposit"
                 ? "bg-red-500 text-white border-2 border-red-500 hover:bg-red-600 hover:border-red-600"
                 : "bg-white text-gray-700 border-2 border-gray-300 hover:bg-gray-50 hover:border-gray-400 hover:text-gray-800"
-              }`}
+            }`}
           >
             Deposit
           </button>
           <button
             onClick={() => setActiveTab("withdraw")}
-            className={`flex-1 py-3 px-6 rounded-xl font-medium transition-all duration-200 cursor-pointer transform hover:scale-105 hover:shadow-md ${activeTab === "withdraw"
+            className={`flex-1 py-3 px-6 rounded-xl font-medium transition-all duration-200 cursor-pointer transform hover:scale-105 hover:shadow-md ${
+              activeTab === "withdraw"
                 ? "bg-gray-800 text-white border-2 border-gray-800 hover:bg-gray-900 hover:border-gray-900"
                 : "bg-white text-gray-700 border-2 border-gray-300 hover:bg-gray-50 hover:border-gray-400 hover:text-gray-800"
-              }`}
+            }`}
           >
             Withdraw
           </button>
