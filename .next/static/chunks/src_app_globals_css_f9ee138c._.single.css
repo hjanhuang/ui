@@ -321,10 +321,6 @@
     height: calc(var(--spacing) * 5);
   }
 
-  .h-\[220px\] {
-    height: 220px;
-  }
-
   .max-h-\[200px\] {
     max-height: 200px;
   }
