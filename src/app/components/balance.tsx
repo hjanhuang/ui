@@ -12,6 +12,8 @@ export default function Balance({ address }: GetBalanceProps) {
     address: (address as `0x${string}`) || undefined,
   });
 
+  
+
   if (isError)
     return (
       <div className="flex items-center gap-2 text-red-500 text-sm">

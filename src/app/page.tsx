@@ -265,6 +265,7 @@ function WithdrawForm({ recipient, setRecipient, amount, setAmount, onConfirm }:
     );
 }
 
+
 export default function Home() {
     // Commented out unused variables that might be needed in future
     const maxQtyGasAuthorized = 180000;
