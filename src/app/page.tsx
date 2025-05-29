@@ -334,6 +334,7 @@ function WithdrawForm({
   );
 }
 
+
 export default function Home() {
   // Commented out unused variables that might be needed in future
   const maxQtyGasAuthorized = 180000;
@@ -342,8 +343,6 @@ export default function Home() {
   const { address, account, isConnected } = useAccount();
   const { disconnect } = useDisconnect();
   const { chain } = useNetwork();
-
-  // const { abi, vault } = useGetABI();
   const [abi, setAbi] = useState<Abi | undefined>();
   const [vault, setVault] = useState<Contract | null>(null);
   const [token, setToken] = useState<Contract | null>(null);
