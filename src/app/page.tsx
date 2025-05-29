@@ -25,6 +25,8 @@ import {
   hash,
   LegacyContractClass,
   Abi,
+  CallData,
+  cairo,
 } from "starknet";
 
 interface GetBalanceProps {
@@ -348,29 +350,52 @@ export default function Home() {
       console.log("Balance: ", balance);
       const rangeIndex = await vault.getRangeIndex();
       console.log("range: ", rangeIndex);
-      const myCall1 = token.populate("approve", ["0x05f0f718e8ae8356b800001104e840ba2384e413f5b1567b55dc457c044a75d9", amount]);
-      const { transaction_hash: txH } = await account.execute(myCall1, {
-        version: constants.TRANSACTION_VERSION.V3,
-        maxFee: 1e15,
-        tip: 1e13,
-        paymasterData: [],
-        resourceBounds: {
-          l1_gas: {
-            max_amount: num.toHex(maxQtyGasAuthorized),
-            max_price_per_unit: num.toHex(maxPriceAuthorizeForOneGas),
-          },
-          l2_gas: {
-            max_amount: num.toHex(0),
-            max_price_per_unit: num.toHex(0),
-          },
+      // const myCall1 = token.populate("approve", ["0x05f0f718e8ae8356b800001104e840ba2384e413f5b1567b55dc457c044a75d9", amount]);
+      // const { transaction_hash: txH } = await account.execute(myCall1, {
+      //   version: constants.TRANSACTION_VERSION.V3,
+      //   maxFee: 1e15,
+      //   tip: 1e13,
+      //   paymasterData: [],
+      //   resourceBounds: {
+      //     l1_gas: {
+      //       max_amount: num.toHex(maxQtyGasAuthorized),
+      //       max_price_per_unit: num.toHex(maxPriceAuthorizeForOneGas),
+      //     },
+      //     l2_gas: {
+      //       max_amount: num.toHex(0),
+      //       max_price_per_unit: num.toHex(0),
+      //     },
+      //   },
+      // });
+      // console.log("tx: ", txH);
+      // const txR = await rpcProvider.waitForTransaction(txH);
+      // if (txR.isSuccess()) {
+      //   console.log("Paid fee =", txR.actual_fee);
+      //   console.log("events: ", txR.events);
+      // }
+
+      const multiCall = await account.execute([
+        // Calling the first contract
+        {
+          contractAddress: erc20Address,
+          entrypoint: 'approve',
+          // approve 1 wei for bridge
+          calldata: CallData.compile({
+            spender: "0x05f0f718e8ae8356b800001104e840ba2384e413f5b1567b55dc457c044a75d9",
+            amount: cairo.uint256(amount),
+          }),
         },
-      });
-      console.log("tx: ", txH);
-      const txR = await rpcProvider.waitForTransaction(txH);
-      if (txR.isSuccess()) {
-        console.log("Paid fee =", txR.actual_fee);
-        console.log("events: ", txR.events);
-      }
+        // Calling the second contract
+        {
+          contractAddress: "0x05f0f718e8ae8356b800001104e840ba2384e413f5b1567b55dc457c044a75d9",
+          entrypoint: 'deposit',
+          // transfer 1 wei to the contract address
+          calldata: CallData.compile({
+            amount: cairo.uint256(amount),
+          }),
+        },
+      ]);
+      await rpcProvider.waitForTransaction(multiCall.transaction_hash);
 
 
 
