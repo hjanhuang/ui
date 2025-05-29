@@ -1,12 +1,8 @@
 "use client";
 
 import React from "react";
-import { mainnet, sepolia } from "@starknet-react/chains";
-import {
-  StarknetConfig,
-  voyager,
-  publicProvider,
-} from "@starknet-react/core";
+import { sepolia } from "@starknet-react/chains";
+import { StarknetConfig, voyager, publicProvider } from "@starknet-react/core";
 import { InjectedConnector } from "starknetkit/injected";
 import { WebWalletConnector } from "starknetkit/webwallet";
 
@@ -27,7 +23,7 @@ type StarknetProviderProps = {
 export default function StarknetProvider({ children }: StarknetProviderProps) {
   return (
     <StarknetConfig
-      chains={[mainnet, sepolia]}
+      chains={[sepolia]}
       provider={publicProvider()}
       connectors={connectors}
       explorer={voyager}

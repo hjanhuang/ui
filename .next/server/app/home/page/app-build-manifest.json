@@ -1,0 +1,31 @@
+{
+  "pages": {
+    "/home/page": [
+      "static/chunks/f07ee_next_dist_35a4b6e8._.js",
+      "static/chunks/src_app_favicon_ico_mjs_df4f45d2._.js",
+      "static/chunks/[root-of-the-server]__8ebb6d4b._.css",
+      "static/chunks/f07ee_next_dist_42b5bc5e._.js",
+      "static/chunks/fdd39_@noble_curves_esm_7b1064d9._.js",
+      "static/chunks/61529_pako_dist_pako_esm_mjs_5e8a2e1f._.js",
+      "static/chunks/b6470_psl_dist_psl_cjs_ba72e15a._.js",
+      "static/chunks/0d53f_starknet_dist_index_mjs_1cee6559._.js",
+      "static/chunks/99bf9_starknetkit_dist_37a304c6._.js",
+      "static/chunks/9db56_@tanstack_query-core_build_modern_ea715ff6._.js",
+      "static/chunks/0d955_@starknet-react_core_dist_index_d63e4bda.js",
+      "static/chunks/node_modules__pnpm_29598362._.js",
+      "static/chunks/src_app_provider_starknet-provider_tsx_5ec440c0._.js",
+      "static/chunks/src_app_layout_tsx_be0f615f._.js",
+      "static/chunks/99bf9_starknetkit_dist_index-1c1d2b10_5782b60a.js",
+      "static/chunks/node_modules__pnpm_a956b30f._.js",
+      "static/chunks/src_app_a0e55753._.js",
+      "static/chunks/src_app_home_page_tsx_9f3d94c7._.js",
+      "static/chunks/[turbopack]_browser_dev_hmr-client_hmr-client_ts_727141ce._.js",
+      "static/chunks/f07ee_next_dist_compiled_072afd38._.js",
+      "static/chunks/f07ee_next_dist_client_5cf5dcf9._.js",
+      "static/chunks/f07ee_next_dist_eb86032f._.js",
+      "static/chunks/61dca_@swc_helpers_cjs_e27e0aca._.js",
+      "static/chunks/_e69f0d32._.js",
+      "static/chunks/_42fd111b._.js"
+    ]
+  }
+}
