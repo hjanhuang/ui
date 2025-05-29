@@ -17,6 +17,8 @@ import {
 } from "starknet";
 import Balance from "./components/balance";
 import Link from "next/link";
+import { useRequestWithdraw } from "./hooks/use-request-withdraw";
+import { Skeleton } from "@radix-ui/themes";
 
 interface DepositFormProps {
   amount: string;
@@ -134,6 +136,8 @@ function WithdrawForm({
   const [expandedCards, setExpandedCards] = useState<{
     [key: number]: boolean;
   }>({});
+
+  // fake
   const [withdrawRequests, setWithdrawRequests] = useState<RequestWithdraw[]>([
     {
       sender: "0x1",
@@ -141,7 +145,18 @@ function WithdrawForm({
       amount: "11",
       status: "pending",
     },
+    {
+      sender: "0x1",
+      recipient: "0x2",
+      amount: "11",
+      status: "pending",
+    },
   ]);
+
+  //  query request withdraws real
+  const { data, isLoading } = useRequestWithdraw({
+    sender: address || "",
+  });
 
   const handleRecipientChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -221,106 +236,112 @@ function WithdrawForm({
         />
       </div>
       {/* Request Withdraw Card  */}
-      {/* Request Withdraw Card  */}
-      {withdrawRequests.length > 0 &&
-        withdrawRequests.map((requestWithdraw, index) => (
-          <div
-            key={index}
-            className="mb-6 p-4 bg-white border-2 border-gray-200 rounded-xl"
-          >
+
+      <div className="h-[220px] overflow-y-auto">
+        {isLoading ? (
+          <Skeleton width="100%" height="50px" />
+        ) : (
+          withdrawRequests.length > 0 &&
+          withdrawRequests.map((requestWithdraw, index) => (
             <div
-              className="flex justify-between items-center cursor-pointer"
-              onClick={() => toggleCard(index)}
+              key={index}
+              className="mb-6 p-4 bg-white border-2 border-gray-200 rounded-xl "
             >
-              <h3 className="text-lg font-medium text-gray-800">
-                Withdraw Request #{index + 1}
-              </h3>
-              <button className="text-gray-500 hover:text-gray-700 transition-colors">
-                {expandedCards[index] ? (
-                  <svg
-                    className="w-5 h-5 transform rotate-180"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 9l-7 7-7-7"
-                    />
-                  </svg>
-                ) : (
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 9l-7 7-7-7"
-                    />
-                  </svg>
-                )}
-              </button>
-            </div>
-            {expandedCards[index] && (
-              <div className="mt-3 space-y-2 border-t border-gray-100 pt-3">
-                {requestWithdraw.sender && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Sender:</span>
-                    <span className="font-mono text-sm">
-                      {getShortAddress(requestWithdraw.sender)}
-                    </span>
-                  </div>
-                )}
-                {requestWithdraw.recipient && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Recipient:</span>
-                    <span className="font-mono text-sm">
-                      {getShortAddress(requestWithdraw.recipient)}
-                    </span>
-                  </div>
-                )}
-                {requestWithdraw.amount && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Amount:</span>
-                    <span className="font-medium">
-                      {requestWithdraw.amount}
-                    </span>
-                  </div>
-                )}
-                {requestWithdraw.status && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Status:</span>
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        requestWithdraw.status === "pending"
-                          ? "bg-yellow-100 text-yellow-800"
-                          : requestWithdraw.status === "finish"
-                          ? "bg-green-100 text-green-800"
-                          : requestWithdraw.status === "check"
-                          ? "bg-blue-100 text-blue-800"
-                          : "bg-gray-100 text-gray-800"
-                      }`}
+              <div
+                className="flex justify-between items-center cursor-pointer"
+                onClick={() => toggleCard(index)}
+              >
+                <h3 className="text-lg font-medium text-gray-800">
+                  Withdraw Request #{index + 1}
+                </h3>
+                <button className="text-gray-500 hover:text-gray-700 transition-colors">
+                  {expandedCards[index] ? (
+                    <svg
+                      className="w-5 h-5 transform rotate-180"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
                     >
-                      {requestWithdraw.status}
-                    </span>
-                  </div>
-                )}
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 9l-7 7-7-7"
+                      />
+                    </svg>
+                  ) : (
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 9l-7 7-7-7"
+                      />
+                    </svg>
+                  )}
+                </button>
               </div>
-            )}
-          </div>
-        ))}
+              {expandedCards[index] && (
+                <div className="mt-3 space-y-2 border-t border-gray-100 pt-3">
+                  {requestWithdraw.sender && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Sender:</span>
+                      <span className="font-mono text-sm">
+                        {getShortAddress(requestWithdraw.sender)}
+                      </span>
+                    </div>
+                  )}
+                  {requestWithdraw.recipient && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Recipient:</span>
+                      <span className="font-mono text-sm">
+                        {getShortAddress(requestWithdraw.recipient)}
+                      </span>
+                    </div>
+                  )}
+                  {requestWithdraw.amount && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Amount:</span>
+                      <span className="font-medium">
+                        {requestWithdraw.amount}
+                      </span>
+                    </div>
+                  )}
+                  {requestWithdraw.status && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Status:</span>
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          requestWithdraw.status === "pending"
+                            ? "bg-yellow-100 text-yellow-800"
+                            : requestWithdraw.status === "finish"
+                            ? "bg-green-100 text-green-800"
+                            : requestWithdraw.status === "check"
+                            ? "bg-blue-100 text-blue-800"
+                            : "bg-gray-100 text-gray-800"
+                        }`}
+                      >
+                        {requestWithdraw.status}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          ))
+        )}
+      </div>
 
       {/* Confirm Button */}
       <button
         onClick={handleConfirm}
         disabled={!!recipientError || !amount || parseFloat(amount) <= 0}
-        className={`w-auto px-8 py-3 rounded-xl font-medium transition-colors float-right ${
+        className={`w-auto px-8 py-3 rounded-xl font-medium transition-colors float-right mt-5 ${
           recipientError || !amount || parseFloat(amount) <= 0
             ? "bg-gray-400 text-gray-200 cursor-not-allowed"
             : "bg-gray-800 text-white hover:bg-gray-700"
@@ -497,8 +518,11 @@ export default function Home() {
     );
 
   return (
-    <div className="min-h-screen  flex items-center justify-center p-4">
-      <div className="bg-gray-50 rounded-3xl shadow-lg p-4 w-full max-w-md">
+    <div className="min-h-screen  flex items-center justify-center p-4 ">
+      <div
+        className="bg-gray-50 rounded-3xl shadow-lg p-4 w-full max-w-md 
+        "
+      >
         <div className="flex items-center justify-between mb-8 ">
           <div className="flex-1">
             <span className="text-gray-600 text-sm">address</span>

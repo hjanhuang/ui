@@ -24,7 +24,7 @@ export default function Balance({ address }: GetBalanceProps) {
       <div className="text-gray-600 text-sm mb-2">Balance</div>
       <div className="text-2xl font-semibold flex items-center justify-center mb-4">
         {isLoading ? (
-          <Skeleton width="140px" height="30px" className="rounded-lg" />
+          <Skeleton width="140px" height="30px" />
         ) : (
           <div className="flex items-center gap-2">
             {data?.formatted || "0.00"}
