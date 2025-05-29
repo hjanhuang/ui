@@ -1,3 +1,4 @@
 {
+  "/faciet/page": "app/faciet/page.js",
   "/page": "app/page.js"
 }
