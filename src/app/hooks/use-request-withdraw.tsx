@@ -20,13 +20,7 @@ export const useRequestWithdraw = ({ sender }: UseRequestWithdrawParams) => {
         `http://localhost:8000/user-requests/withdraw-requests?sender=${sender}`
       );
 
-      if (!response.ok) {
-        throw new Error(
-          `Failed to fetch withdraw requests: ${response.statusText}`
-        );
-      }
-
-      return response.json();
+      return response.json() || [];
     },
     enabled: !!sender,
     staleTime: 1000 * 60 * 5,

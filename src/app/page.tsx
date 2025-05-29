@@ -137,24 +137,8 @@ function WithdrawForm({
     [key: number]: boolean;
   }>({});
 
-  // fake
-  const [withdrawRequests, setWithdrawRequests] = useState<RequestWithdraw[]>([
-    {
-      sender: "0x1",
-      recipient: "0x2",
-      amount: "11",
-      status: "pending",
-    },
-    {
-      sender: "0x1",
-      recipient: "0x2",
-      amount: "11",
-      status: "pending",
-    },
-  ]);
-
   //  query request withdraws real
-  const { data, isLoading } = useRequestWithdraw({
+  const { data, isLoading, error } = useRequestWithdraw({
     sender: address || "",
   });
 
@@ -237,12 +221,13 @@ function WithdrawForm({
       </div>
       {/* Request Withdraw Card  */}
 
-      <div className="h-[220px] overflow-y-auto">
+      <div className="max-h-[200px] overflow-y-auto">
         {isLoading ? (
           <Skeleton width="100%" height="50px" />
         ) : (
-          withdrawRequests.length > 0 &&
-          withdrawRequests.map((requestWithdraw, index) => (
+          data &&
+          data.length > 0 &&
+          data.map((requestWithdraw, index) => (
             <div
               key={index}
               className="mb-6 p-4 bg-white border-2 border-gray-200 rounded-xl "
