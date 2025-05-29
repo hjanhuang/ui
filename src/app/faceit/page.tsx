@@ -12,7 +12,7 @@ export default function FundPage() {
     gameId: "",
   });
 
-  const handleInputChange = (field, value) => {
+  const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
@@ -116,7 +116,7 @@ export default function FundPage() {
                 : "bg-gray-100 text-gray-600 hover:bg-gray-200"
             }`}
           >
-            Fun
+            Fund
           </button>
         </div>
 
