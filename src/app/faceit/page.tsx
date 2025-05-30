@@ -6,6 +6,7 @@ import { useAccount } from "@starknet-react/core";
 import { axiosRequest } from "../hooks/axiosUtils";
 import { getShortAddress } from "../utils/getShortAddress";
 import { Copy } from "lucide-react";
+import Balance from "../components/balance";
 
 export default function FundPage() {
     const { address } = useAccount();
@@ -111,10 +112,8 @@ export default function FundPage() {
                     </button>
                 </div>
 
-                {/* Balance Section */}
                 <div className="text-center mb-8">
-                    <div className="text-gray-600 text-sm mb-2">Balance</div>
-                    <div className="text-2xl font-bold text-gray-900">0.003999873690898627 ETH</div>
+                    <Balance address={address} />
                 </div>
 
                 {/* Tab Buttons */}

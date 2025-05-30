@@ -72,7 +72,6 @@
     --text-2xl--line-height: calc(2 / 1.5);
     --font-weight-medium: 500;
     --font-weight-semibold: 600;
-    --font-weight-bold: 700;
     --radius-md: .375rem;
     --radius-lg: .5rem;
     --radius-xl: .75rem;
@@ -326,10 +325,6 @@
     display: inline-flex;
   }
 
-  .h-4 {
-    height: calc(var(--spacing) * 4);
-  }
-
   .h-5 {
     height: calc(var(--spacing) * 5);
   }
@@ -340,10 +335,6 @@
 
   .min-h-screen {
     min-height: 100vh;
-  }
-
-  .w-4 {
-    width: calc(var(--spacing) * 4);
   }
 
   .w-5 {
@@ -614,11 +605,6 @@
     line-height: var(--tw-leading, var(--text-xs--line-height));
   }
 
-  .font-bold {
-    --tw-font-weight: var(--font-weight-bold);
-    font-weight: var(--font-weight-bold);
-  }
-
   .font-medium {
     --tw-font-weight: var(--font-weight-medium);
     font-weight: var(--font-weight-medium);
@@ -659,10 +645,6 @@
 
   .text-gray-800 {
     color: var(--color-gray-800);
-  }
-
-  .text-gray-900 {
-    color: var(--color-gray-900);
   }
 
   .text-green-600 {
