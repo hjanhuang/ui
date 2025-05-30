@@ -39,16 +39,16 @@ const GameList: React.FC = () => {
 
             //filter data that contains "host" field
             if (res && res.status === 200) {
-                const filteredData = res?.data.data.filter((game: GameInfo) => game.host !== "");
+                const filteredData = res?.data.data.filter((game: GameInfo) => !!game.host && game.host !== "");
                 setGames(filteredData || []);
-                setTotal(res.data.total || 0);
+                setTotal(filteredData.length || 0);
                 // Filter after fetch for search
                 if (searchValue) {
                     setFilteredGames(
-                        (res.data.data || []).filter((game: GameInfo) => game.gameName.toLowerCase().includes(searchValue.toLowerCase()))
+                        (filteredData || []).filter((game: GameInfo) => game.gameName.toLowerCase().includes(searchValue.toLowerCase()))
                     );
                 } else {
-                    setFilteredGames(res.data.data || []);
+                    setFilteredGames(filteredData || []);
                 }
             } else {
                 setError("Failed to fetch games");
