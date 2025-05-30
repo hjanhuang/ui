@@ -36,8 +36,11 @@ const GameList: React.FC = () => {
                 method: "GET",
                 params: { skip, limit: PAGE_SIZE },
             });
+
+            //filter data that contains "host" field
             if (res && res.status === 200) {
-                setGames(res.data.data || []);
+                const filteredData = res?.data.data.filter((game: GameInfo) => game.host !== "");
+                setGames(filteredData || []);
                 setTotal(res.data.total || 0);
                 // Filter after fetch for search
                 if (searchValue) {
