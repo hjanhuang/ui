@@ -7,7 +7,7 @@ import { axiosRequest } from "../hooks/axiosUtils";
 import { getShortAddress } from "../utils/getShortAddress";
 import { Copy } from "lucide-react";
 import Balance from "../components/balance";
-import { RpcProvider, Contract, constants, num, Abi, CallData, cairo } from "starknet";
+import { RpcProvider, Contract, constants, num, Abi, CallData, cairo, uint256 } from "starknet";
 
 export default function FundPage() {
     //const { address } = useAccount();
@@ -32,6 +32,10 @@ export default function FundPage() {
     const { address, account, isConnected } = useAccount();
     const { disconnect } = useDisconnect();
     const { chain } = useNetwork();
+
+    const rpcProvider = new RpcProvider({
+                nodeUrl: "https://starknet-sepolia.public.blastapi.io",
+            });
 
     const [abi, setAbi] = useState<Abi | undefined>();
     const [faceit, setFaceit] = useState<Contract | null>(null);
@@ -78,8 +82,101 @@ export default function FundPage() {
         }));
     };
 
-    const handleConfirm = () => {
+    const handleConfirm = async () => {
         setIsConfirming(true);
+        if (activeTab == "fund") {
+            console.log("Fund");
+            const amount = formData.amount;
+            const gameId = formData.gameId;
+
+            console.log("Amount", amount);
+            console.log("gameId", gameId);
+
+            if (!address || !account) return;
+
+            if (!faceit) {
+                console.error("Faceit contract is not loaded yet.");
+                return;
+            }
+
+            if (!token) {
+                console.error("Token contract is not loaded yet.");
+                return;
+            }
+
+            // const rpcProvider = new RpcProvider({
+            //     nodeUrl: "https://starknet-sepolia.public.blastapi.io",
+            // });
+
+            const amountUint256 = uint256.bnToUint256(BigInt(amount));
+            const gameIdUint256 = uint256.bnToUint256(BigInt(gameId));
+            const multiCall = await account.execute([
+                {
+                    contractAddress:
+                        "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d",
+                    entrypoint: "transfer",
+                    calldata: CallData.compile({
+                        recipient:
+                            "0x00260b8006d33bf71c8504953874fc84d239ba954d22df3e1f742f1ff2c089bf",
+                        amount: amountUint256,
+                    }),
+                },
+                {
+                    contractAddress:
+                        "0x00260b8006d33bf71c8504953874fc84d239ba954d22df3e1f742f1ff2c089bf",
+                    entrypoint: "raiseFund",
+                    calldata: CallData.compile({
+                        gameId: gameIdUint256,
+                        amountToken: amountUint256,
+                    }),
+                },
+            ]);
+            console.log("Not Done");
+            await rpcProvider.waitForTransaction(multiCall.transaction_hash);
+            console.log("Done");
+        } else if (activeTab == "withdraw") {
+            if (!address || !account) return;
+
+            const recipient = formData.recipientAddress;
+            const gameId = formData.gameId;
+            const amount = formData.amount;
+
+            const amountUint256 = uint256.bnToUint256(BigInt(amount));
+            const gameIdUint256 = uint256.bnToUint256(BigInt(gameId));
+
+            if (!faceit) {
+                console.error("Faceit contract is not loaded yet.");
+                return;
+            }
+
+            if (!token) {
+                console.error("Token contract is not loaded yet.");
+                return;
+            }
+
+            const myCall1 = faceit.populate("requestWithdraw", [gameId, amount, recipient]);
+            const { transaction_hash: txH } = await account.execute(myCall1, {
+                version: constants.TRANSACTION_VERSION.V3,
+                maxFee: 1e15,
+                tip: 1e13,
+                paymasterData: [],
+                resourceBounds: {
+                    l1_gas: {
+                        max_amount: num.toHex(maxQtyGasAuthorized),
+                        max_price_per_unit: num.toHex(maxPriceAuthorizeForOneGas),
+                    },
+                    l2_gas: {
+                        max_amount: num.toHex(0),
+                        max_price_per_unit: num.toHex(0),
+                    },
+                },
+            });
+            console.log("tx: ", txH);
+            const txR = await rpcProvider.waitForTransaction(txH);
+
+
+        }
+
         setTimeout(() => {
             setIsConfirming(false);
             setFormData({
@@ -88,6 +185,8 @@ export default function FundPage() {
                 gameId: "",
             });
         }, 2000);
+
+
     };
 
     const handleRegisterGame = async (e: React.FormEvent) => {
