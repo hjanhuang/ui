@@ -193,12 +193,40 @@ export default function FundPage() {
         }, 2000);
     };
 
+    // Helper to get all games (for idGame uniqueness check)
+    async function fetchAllGames() {
+        let allGames: any[] = [];
+        let page = 1;
+        const PAGE_SIZE = 100;
+        while (true) {
+            const res = await axiosRequest({
+                url: "http://localhost:8000/game/all",
+                method: "GET",
+                params: { skip: (page - 1) * PAGE_SIZE, limit: PAGE_SIZE },
+            });
+            if (res && res.status === 200 && Array.isArray(res.data.data)) {
+                allGames = allGames.concat(res.data.data);
+                if (res.data.data.length < PAGE_SIZE) break;
+                page++;
+            } else {
+                break;
+            }
+        }
+        return allGames;
+    }
+
     const handleRegisterGame = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsRegisteringGame(true);
         setRegisterGameResult(null);
-        // Giả lập gọi contract trả về id
-        const idGame = Math.floor(Math.random() * 1000000).toString();
+        // Generate unique idGame
+        let idGame: string;
+        let allGames = await fetchAllGames();
+        const existingIds = new Set(allGames.map((g: any) => g.idGame));
+        do {
+            idGame = Math.floor(Math.random() * 1000000).toString();
+        } while (existingIds.has(idGame));
+        
         const host = address || "";
         const { gameName, description } = gameForm;
         if (!address || !account) return;
