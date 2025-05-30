@@ -265,7 +265,6 @@ function WithdrawForm({ recipient, setRecipient, amount, setAmount, onConfirm }:
     );
 }
 
-
 export default function Home() {
     // Commented out unused variables that might be needed in future
     const maxQtyGasAuthorized = 180000;
@@ -440,10 +439,8 @@ export default function Home() {
                     <div className="flex gap-2 items-center">
                         <Link
                             href="/faceit"
-                            target="_blank"
-                            rel="noopener noreferrer"
                             className="inline-flex items-center gap-2 px-4 py-2 border border-blue-500 text-blue-600 rounded-md text-sm font-medium hover:bg-blue-50 hover:shadow transition-all duration-200"
-                            title="Open Faceit in new tab"
+                            title="Go to Faceit"
                         >
                             Faceit
                             <ExternalLink size={16} />
