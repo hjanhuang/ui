@@ -1,12 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useAccount, useDisconnect, useNetwork } from "@starknet-react/core";
 import { axiosRequest } from "../hooks/axiosUtils";
 import { getShortAddress } from "../utils/getShortAddress";
 import { Copy } from "lucide-react";
 import Balance from "../components/balance";
+import { RpcProvider, Contract, constants, num, Abi, CallData, cairo } from "starknet";
 
 export default function FundPage() {
     //const { address } = useAccount();
@@ -33,7 +34,7 @@ export default function FundPage() {
     const { chain } = useNetwork();
 
     const [abi, setAbi] = useState<Abi | undefined>();
-    const [vault, setVault] = useState<Contract | null>(null);
+    const [faceit, setFaceit] = useState<Contract | null>(null);
     const [token, setToken] = useState<Contract | null>(null);
 
     useEffect(() => {
@@ -43,20 +44,21 @@ export default function FundPage() {
             const rpcProvider = new RpcProvider({
                 nodeUrl: "https://starknet-sepolia.public.blastapi.io",
             });
-            const contractAddress = "0x05f0f718e8ae8356b800001104e840ba2384e413f5b1567b55dc457c044a75d9";
-            const { abi: vaultAbi } = await rpcProvider.getClassAt(contractAddress);
-            if (!vaultAbi) return;
-            const vaultContract = new Contract(vaultAbi, contractAddress, rpcProvider);
-            vaultContract.connect(account);
+            const contractAddress = "0x00260b8006d33bf71c8504953874fc84d239ba954d22df3e1f742f1ff2c089bf";
+            const { abi: faceitAbi } = await rpcProvider.getClassAt(contractAddress);
+            if (!faceitAbi) return;
+            const faceitContract = new Contract(faceitAbi, contractAddress, rpcProvider);
+            faceitContract.connect(account);
 
-            setAbi(vaultAbi as Abi);
-            setVault(vaultContract);
+            setAbi(faceitAbi as Abi);
+            setFaceit(faceitContract);
 
             const erc20_address = "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d";
             const { abi: tokenAbi } = await rpcProvider.getClassAt(erc20_address);
             if (!tokenAbi) return;
             const erc20 = new Contract(tokenAbi, erc20_address, rpcProvider);
             erc20.connect(account);
+            console.log("erc20", erc20);
             setToken(erc20);
         };
 
@@ -96,7 +98,42 @@ export default function FundPage() {
         const idGame = Math.floor(Math.random() * 1000000).toString();
         const host = address || "";
         const { gameName, description } = gameForm;
+        if (!address || !account) return;
+
+        if (!faceit) {
+            console.error("Faceit contract is not loaded yet.");
+            return;
+        }
+
+        if (!token) {
+            console.error("Token contract is not loaded yet.");
+            return;
+        }
         try {
+            const rpcProvider = new RpcProvider({
+                nodeUrl: "https://starknet-sepolia.public.blastapi.io",
+            });
+
+            const myCall1 = faceit.populate("register");
+            const { transaction_hash: txH } = await account.execute(myCall1, {
+                version: constants.TRANSACTION_VERSION.V3,
+                maxFee: 1e15,
+                tip: 1e13,
+                paymasterData: [],
+                resourceBounds: {
+                    l1_gas: {
+                        max_amount: num.toHex(maxQtyGasAuthorized),
+                        max_price_per_unit: num.toHex(maxPriceAuthorizeForOneGas),
+                    },
+                    l2_gas: {
+                        max_amount: num.toHex(0),
+                        max_price_per_unit: num.toHex(0),
+                    },
+                },
+            });
+            console.log("tx: ", txH);
+            const txR = await rpcProvider.waitForTransaction(txH);
+
             const res = await axiosRequest({
                 url: "http://localhost:8000/game/register",
                 method: "POST",
