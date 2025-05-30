@@ -2,14 +2,14 @@
 
 import Link from "next/link";
 import React, { useState } from "react";
-import { useAccount } from "@starknet-react/core";
+import { useAccount, useDisconnect, useNetwork } from "@starknet-react/core";
 import { axiosRequest } from "../hooks/axiosUtils";
 import { getShortAddress } from "../utils/getShortAddress";
 import { Copy } from "lucide-react";
 import Balance from "../components/balance";
 
 export default function FundPage() {
-    const { address } = useAccount();
+    //const { address } = useAccount();
     const [activeTab, setActiveTab] = useState("withdraw");
     const [isConfirming, setIsConfirming] = useState(false);
     const [formData, setFormData] = useState({
@@ -24,6 +24,44 @@ export default function FundPage() {
     });
     const [isRegisteringGame, setIsRegisteringGame] = useState(false);
     const [registerGameResult, setRegisterGameResult] = useState<string | null>(null);
+
+    const maxQtyGasAuthorized = 180000;
+    const maxPriceAuthorizeForOneGas = 10 ** 15;
+
+    const { address, account, isConnected } = useAccount();
+    const { disconnect } = useDisconnect();
+    const { chain } = useNetwork();
+
+    const [abi, setAbi] = useState<Abi | undefined>();
+    const [vault, setVault] = useState<Contract | null>(null);
+    const [token, setToken] = useState<Contract | null>(null);
+
+    useEffect(() => {
+        const fetchAbiAndContract = async () => {
+            if (!account) return;
+
+            const rpcProvider = new RpcProvider({
+                nodeUrl: "https://starknet-sepolia.public.blastapi.io",
+            });
+            const contractAddress = "0x05f0f718e8ae8356b800001104e840ba2384e413f5b1567b55dc457c044a75d9";
+            const { abi: vaultAbi } = await rpcProvider.getClassAt(contractAddress);
+            if (!vaultAbi) return;
+            const vaultContract = new Contract(vaultAbi, contractAddress, rpcProvider);
+            vaultContract.connect(account);
+
+            setAbi(vaultAbi as Abi);
+            setVault(vaultContract);
+
+            const erc20_address = "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d";
+            const { abi: tokenAbi } = await rpcProvider.getClassAt(erc20_address);
+            if (!tokenAbi) return;
+            const erc20 = new Contract(tokenAbi, erc20_address, rpcProvider);
+            erc20.connect(account);
+            setToken(erc20);
+        };
+
+        fetchAbiAndContract();
+    }, [account]);
 
     const handleInputChange = (field: string, value: string) => {
         setFormData((prev) => ({
@@ -120,27 +158,24 @@ export default function FundPage() {
                 <div className="flex gap-2 mb-6">
                     <button
                         onClick={() => setActiveTab("registerGame")}
-                        className={`flex-1 py-3 px-4 rounded-xl font-semibold transition-all ${
-                            activeTab === "registerGame" ? "bg-blue-500 text-white shadow-lg" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                        }`}
+                        className={`flex-1 py-3 px-4 rounded-xl font-semibold transition-all ${activeTab === "registerGame" ? "bg-blue-500 text-white shadow-lg" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                            }`}
                     >
                         Register Game
                     </button>
 
                     <button
                         onClick={() => setActiveTab("fund")}
-                        className={`flex-1 py-3 px-4 rounded-xl font-semibold transition-all ${
-                            activeTab === "fund" ? "bg-red-500 text-white shadow-lg" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                        }`}
+                        className={`flex-1 py-3 px-4 rounded-xl font-semibold transition-all ${activeTab === "fund" ? "bg-red-500 text-white shadow-lg" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                            }`}
                     >
                         Fund
                     </button>
 
                     <button
                         onClick={() => setActiveTab("withdraw")}
-                        className={`flex-1 py-3 px-4 rounded-xl font-semibold transition-all ${
-                            activeTab === "withdraw" ? "bg-red-500 text-white shadow-lg" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                        }`}
+                        className={`flex-1 py-3 px-4 rounded-xl font-semibold transition-all ${activeTab === "withdraw" ? "bg-red-500 text-white shadow-lg" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                            }`}
                     >
                         Withdraw
                     </button>
@@ -233,9 +268,8 @@ export default function FundPage() {
                         <button
                             type="submit"
                             disabled={isRegisteringGame}
-                            className={`w-full py-4 rounded-xl font-semibold text-white transition-all ${
-                                isRegisteringGame ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700 shadow-lg"
-                            }`}
+                            className={`w-full py-4 rounded-xl font-semibold text-white transition-all ${isRegisteringGame ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700 shadow-lg"
+                                }`}
                         >
                             {isRegisteringGame ? "Registering..." : "Register"}
                         </button>
@@ -248,9 +282,8 @@ export default function FundPage() {
                     <button
                         onClick={handleConfirm}
                         disabled={!isFormValid() || isConfirming}
-                        className={`w-full py-4 rounded-xl font-semibold text-white transition-all ${
-                            isFormValid() && !isConfirming ? "bg-gray-800 hover:bg-gray-900 shadow-lg" : "bg-gray-400 cursor-not-allowed"
-                        }`}
+                        className={`w-full py-4 rounded-xl font-semibold text-white transition-all ${isFormValid() && !isConfirming ? "bg-gray-800 hover:bg-gray-900 shadow-lg" : "bg-gray-400 cursor-not-allowed"
+                            }`}
                     >
                         {isConfirming ? "Confirming..." : "Confirm"}
                     </button>
