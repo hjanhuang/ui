@@ -52,7 +52,7 @@ export default function FundPage() {
             const rpcProvider = new RpcProvider({
                 nodeUrl: "https://starknet-sepolia.public.blastapi.io",
             });
-            const contractAddress = "0x004261931e12970f04713ce5beb82b73a6e36f0857985eb65230bab3fb6bdc47";
+            const contractAddress = "0x061102437939d300bcf494c00f55c4a60024cde4e9827fa692abb119c27053d8";
             const { abi: faceitAbi } = await rpcProvider.getClassAt(contractAddress);
             if (!faceitAbi) return;
             const faceitContract = new Contract(faceitAbi, contractAddress, rpcProvider);
@@ -121,12 +121,12 @@ export default function FundPage() {
                         contractAddress: "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d",
                         entrypoint: "transfer",
                         calldata: CallData.compile({
-                            recipient: "0x004261931e12970f04713ce5beb82b73a6e36f0857985eb65230bab3fb6bdc47",
+                            recipient: "0x061102437939d300bcf494c00f55c4a60024cde4e9827fa692abb119c27053d8",
                             amount: amountUint256,
                         }),
                     },
                     {
-                        contractAddress: "0x004261931e12970f04713ce5beb82b73a6e36f0857985eb65230bab3fb6bdc47",
+                        contractAddress: "0x061102437939d300bcf494c00f55c4a60024cde4e9827fa692abb119c27053d8",
                         entrypoint: "raiseFund",
                         calldata: CallData.compile({
                             gameId: gameIdUint256,
@@ -245,7 +245,7 @@ export default function FundPage() {
                 nodeUrl: "https://starknet-sepolia.public.blastapi.io",
             });
 
-            const myCall1 = faceit.populate("register");
+            const myCall1 = faceit.populate("register", [idGame]);
             const { transaction_hash: txH } = await account.execute(myCall1, {
                 version: constants.TRANSACTION_VERSION.V3,
                 maxFee: 1e15,
