@@ -8,6 +8,7 @@ import { getShortAddress } from "../utils/getShortAddress";
 import { Copy } from "lucide-react";
 import Balance from "../components/balance";
 import { RpcProvider, Contract, constants, num, Abi, CallData, cairo, uint256 } from "starknet";
+import GameList from "../components/GameList";
 
 export default function FundPage() {
     //const { address } = useAccount();
@@ -34,12 +35,15 @@ export default function FundPage() {
     const { chain } = useNetwork();
 
     const rpcProvider = new RpcProvider({
-                nodeUrl: "https://starknet-sepolia.public.blastapi.io",
-            });
+        nodeUrl: "https://starknet-sepolia.public.blastapi.io",
+    });
 
     const [abi, setAbi] = useState<Abi | undefined>();
     const [faceit, setFaceit] = useState<Contract | null>(null);
     const [token, setToken] = useState<Contract | null>(null);
+
+    // Add submit status for fund/withdraw
+    const [submitStatus, setSubmitStatus] = useState<"idle" | "processing" | "success" | "fail">("idle");
 
     useEffect(() => {
         const fetchAbiAndContract = async () => {
@@ -84,99 +88,100 @@ export default function FundPage() {
 
     const handleConfirm = async () => {
         setIsConfirming(true);
-        if (activeTab == "fund") {
-            console.log("Fund");
-            const amount = formData.amount;
-            const gameId = formData.gameId;
+        setSubmitStatus("processing");
+        try {
+            if (activeTab == "fund") {
+                console.log("Fund");
+                const amount = formData.amount;
+                const gameId = formData.gameId;
 
-            console.log("Amount", amount);
-            console.log("gameId", gameId);
+                console.log("Amount", amount);
+                console.log("gameId", gameId);
 
-            if (!address || !account) return;
+                if (!address || !account) return;
 
-            if (!faceit) {
-                console.error("Faceit contract is not loaded yet.");
-                return;
-            }
+                if (!faceit) {
+                    console.error("Faceit contract is not loaded yet.");
+                    return;
+                }
 
-            if (!token) {
-                console.error("Token contract is not loaded yet.");
-                return;
-            }
+                if (!token) {
+                    console.error("Token contract is not loaded yet.");
+                    return;
+                }
 
-            // const rpcProvider = new RpcProvider({
-            //     nodeUrl: "https://starknet-sepolia.public.blastapi.io",
-            // });
+                // const rpcProvider = new RpcProvider({
+                //     nodeUrl: "https://starknet-sepolia.public.blastapi.io",
+                // });
 
-            const amountUint256 = uint256.bnToUint256(BigInt(amount));
-            const gameIdUint256 = uint256.bnToUint256(BigInt(gameId));
-            const multiCall = await account.execute([
-                {
-                    contractAddress:
-                        "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d",
-                    entrypoint: "transfer",
-                    calldata: CallData.compile({
-                        recipient:
-                            "0x004261931e12970f04713ce5beb82b73a6e36f0857985eb65230bab3fb6bdc47",
-                        amount: amountUint256,
-                    }),
-                },
-                {
-                    contractAddress:
-                        "0x004261931e12970f04713ce5beb82b73a6e36f0857985eb65230bab3fb6bdc47",
-                    entrypoint: "raiseFund",
-                    calldata: CallData.compile({
-                        gameId: gameIdUint256,
-                        amountToken: amountUint256,
-                    }),
-                },
-            ]);
-            console.log("Not Done");
-            await rpcProvider.waitForTransaction(multiCall.transaction_hash);
-            console.log("Done");
-        } else if (activeTab == "withdraw") {
-            if (!address || !account) return;
-
-            const recipient = formData.recipientAddress;
-            const gameId = formData.gameId;
-            const amount = formData.amount;
-
-            const amountUint256 = uint256.bnToUint256(BigInt(amount));
-            const gameIdUint256 = uint256.bnToUint256(BigInt(gameId));
-
-            if (!faceit) {
-                console.error("Faceit contract is not loaded yet.");
-                return;
-            }
-
-            if (!token) {
-                console.error("Token contract is not loaded yet.");
-                return;
-            }
-
-            const myCall1 = faceit.populate("requestWithdraw", [gameId, amount, recipient]);
-            const { transaction_hash: txH } = await account.execute(myCall1, {
-                version: constants.TRANSACTION_VERSION.V3,
-                maxFee: 1e15,
-                tip: 1e13,
-                paymasterData: [],
-                resourceBounds: {
-                    l1_gas: {
-                        max_amount: num.toHex(maxQtyGasAuthorized),
-                        max_price_per_unit: num.toHex(maxPriceAuthorizeForOneGas),
+                const amountUint256 = uint256.bnToUint256(BigInt(amount));
+                const gameIdUint256 = uint256.bnToUint256(BigInt(gameId));
+                const multiCall = await account.execute([
+                    {
+                        contractAddress: "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d",
+                        entrypoint: "transfer",
+                        calldata: CallData.compile({
+                            recipient: "0x004261931e12970f04713ce5beb82b73a6e36f0857985eb65230bab3fb6bdc47",
+                            amount: amountUint256,
+                        }),
                     },
-                    l2_gas: {
-                        max_amount: num.toHex(0),
-                        max_price_per_unit: num.toHex(0),
+                    {
+                        contractAddress: "0x004261931e12970f04713ce5beb82b73a6e36f0857985eb65230bab3fb6bdc47",
+                        entrypoint: "raiseFund",
+                        calldata: CallData.compile({
+                            gameId: gameIdUint256,
+                            amountToken: amountUint256,
+                        }),
                     },
-                },
-            });
-            console.log("tx: ", txH);
-            const txR = await rpcProvider.waitForTransaction(txH);
+                ]);
+                console.log("Not Done");
+                await rpcProvider.waitForTransaction(multiCall.transaction_hash);
+                console.log("Done");
+                setSubmitStatus("success");
+            } else if (activeTab == "withdraw") {
+                if (!address || !account) return;
 
+                const recipient = formData.recipientAddress;
+                const gameId = formData.gameId;
+                const amount = formData.amount;
 
+                const amountUint256 = uint256.bnToUint256(BigInt(amount));
+                const gameIdUint256 = uint256.bnToUint256(BigInt(gameId));
+
+                if (!faceit) {
+                    console.error("Faceit contract is not loaded yet.");
+                    return;
+                }
+
+                if (!token) {
+                    console.error("Token contract is not loaded yet.");
+                    return;
+                }
+
+                const myCall1 = faceit.populate("requestWithdraw", [gameId, amount, recipient]);
+                const { transaction_hash: txH } = await account.execute(myCall1, {
+                    version: constants.TRANSACTION_VERSION.V3,
+                    maxFee: 1e15,
+                    tip: 1e13,
+                    paymasterData: [],
+                    resourceBounds: {
+                        l1_gas: {
+                            max_amount: num.toHex(maxQtyGasAuthorized),
+                            max_price_per_unit: num.toHex(maxPriceAuthorizeForOneGas),
+                        },
+                        l2_gas: {
+                            max_amount: num.toHex(0),
+                            max_price_per_unit: num.toHex(0),
+                        },
+                    },
+                });
+                console.log("tx: ", txH);
+                const txR = await rpcProvider.waitForTransaction(txH);
+                setSubmitStatus("success");
+            }
+        } catch (e) {
+            setSubmitStatus("fail");
         }
-
         setTimeout(() => {
             setIsConfirming(false);
             setFormData({
@@ -184,9 +189,8 @@ export default function FundPage() {
                 amount: "",
                 gameId: "",
             });
+            setSubmitStatus("idle");
         }, 2000);
-
-
     };
 
     const handleRegisterGame = async (e: React.FormEvent) => {
@@ -264,7 +268,7 @@ export default function FundPage() {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="min-h-screen flex flex-col md:flex-row items-start justify-center gap-8 p-4">
             <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md">
                 {/* Address Section */}
                 <div className="flex items-center justify-between mb-8 ">
@@ -294,24 +298,27 @@ export default function FundPage() {
                 <div className="flex gap-2 mb-6">
                     <button
                         onClick={() => setActiveTab("registerGame")}
-                        className={`flex-1 py-3 px-4 rounded-xl font-semibold transition-all ${activeTab === "registerGame" ? "bg-blue-500 text-white shadow-lg" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                            }`}
+                        className={`flex-1 py-3 px-4 rounded-xl font-semibold transition-all ${
+                            activeTab === "registerGame" ? "bg-blue-500 text-white shadow-lg" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                        }`}
                     >
                         Register Game
                     </button>
 
                     <button
                         onClick={() => setActiveTab("fund")}
-                        className={`flex-1 py-3 px-4 rounded-xl font-semibold transition-all ${activeTab === "fund" ? "bg-red-500 text-white shadow-lg" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                            }`}
+                        className={`flex-1 py-3 px-4 rounded-xl font-semibold transition-all ${
+                            activeTab === "fund" ? "bg-red-500 text-white shadow-lg" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                        }`}
                     >
                         Fund
                     </button>
 
                     <button
                         onClick={() => setActiveTab("withdraw")}
-                        className={`flex-1 py-3 px-4 rounded-xl font-semibold transition-all ${activeTab === "withdraw" ? "bg-red-500 text-white shadow-lg" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                            }`}
+                        className={`flex-1 py-3 px-4 rounded-xl font-semibold transition-all ${
+                            activeTab === "withdraw" ? "bg-red-500 text-white shadow-lg" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                        }`}
                     >
                         Withdraw
                     </button>
@@ -404,8 +411,9 @@ export default function FundPage() {
                         <button
                             type="submit"
                             disabled={isRegisteringGame}
-                            className={`w-full py-4 rounded-xl font-semibold text-white transition-all ${isRegisteringGame ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700 shadow-lg"
-                                }`}
+                            className={`w-full py-4 rounded-xl font-semibold text-white transition-all ${
+                                isRegisteringGame ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700 shadow-lg"
+                            }`}
                         >
                             {isRegisteringGame ? "Registering..." : "Register"}
                         </button>
@@ -415,16 +423,23 @@ export default function FundPage() {
                 )}
                 {/* Confirm Button */}
                 {(activeTab === "withdraw" || activeTab === "fund") && (
-                    <button
-                        onClick={handleConfirm}
-                        disabled={!isFormValid() || isConfirming}
-                        className={`w-full py-4 rounded-xl font-semibold text-white transition-all ${isFormValid() && !isConfirming ? "bg-gray-800 hover:bg-gray-900 shadow-lg" : "bg-gray-400 cursor-not-allowed"
+                    <>
+                        <button
+                            onClick={handleConfirm}
+                            disabled={!isFormValid() || isConfirming}
+                            className={`w-full py-4 rounded-xl font-semibold text-white transition-all ${
+                                isFormValid() && !isConfirming ? "bg-gray-800 hover:bg-gray-900 shadow-lg" : "bg-gray-400 cursor-not-allowed"
                             }`}
-                    >
-                        {isConfirming ? "Confirming..." : "Confirm"}
-                    </button>
+                        >
+                            {isConfirming ? "Confirming..." : "Confirm"}
+                        </button>
+                        {submitStatus === "processing" && <div className="text-blue-600 text-center mt-2">Processing...</div>}
+                        {submitStatus === "success" && <div className="text-green-600 text-center mt-2">Success!</div>}
+                        {submitStatus === "fail" && <div className="text-red-600 text-center mt-2">Failed. Please try again.</div>}
+                    </>
                 )}
             </div>
+            <GameList />
         </div>
     );
 }

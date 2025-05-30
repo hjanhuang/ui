@@ -12,11 +12,6 @@ import Link from "next/link";
 import { axiosRequest } from "./hooks/axiosUtils";
 import { Skeleton } from "@radix-ui/themes";
 import { ExternalLink } from "lucide-react";
-import dotenv from "dotenv";
-dotenv.config()
-
-
-
 
 interface DepositFormProps {
     amount: string;
@@ -28,6 +23,7 @@ interface DepositFormProps {
 function DepositForm({ amount, setAmount, onConfirm, isLoading }: DepositFormProps) {
     const [amountError, setAmountError] = useState("");
     const { address } = useAccount();
+    const [submitStatus, setSubmitStatus] = useState<"idle" | "processing" | "success" | "fail">("idle");
 
     const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
@@ -44,7 +40,7 @@ function DepositForm({ amount, setAmount, onConfirm, isLoading }: DepositFormPro
         setAmount(value);
     };
 
-    const handleConfirm = () => {
+    const handleConfirm = async () => {
         // Additional validation before confirming
         if (!amount) {
             setAmountError("Amount is required");
@@ -60,7 +56,14 @@ function DepositForm({ amount, setAmount, onConfirm, isLoading }: DepositFormPro
         }
 
         setAmountError("");
-        onConfirm();
+        setSubmitStatus("processing");
+        try {
+            await onConfirm();
+            setSubmitStatus("success");
+        } catch (e) {
+            setSubmitStatus("fail");
+        }
+        setTimeout(() => setSubmitStatus("idle"), 2000);
     };
 
     return (
@@ -94,6 +97,9 @@ function DepositForm({ amount, setAmount, onConfirm, isLoading }: DepositFormPro
             >
                 {isLoading ? "Confirming..." : "Confirm"}
             </button>
+            {submitStatus === "processing" && <div className="text-blue-600 text-center mt-2">Processing...</div>}
+            {submitStatus === "success" && <div className="text-green-600 text-center mt-2">Success!</div>}
+            {submitStatus === "fail" && <div className="text-red-600 text-center mt-2">Failed. Please try again.</div>}
             <div className="clear-both"></div>
         </>
     );
@@ -113,6 +119,7 @@ function WithdrawForm({ recipient, setRecipient, amount, setAmount, onConfirm }:
     const [expandedCards, setExpandedCards] = useState<{ [key: number]: boolean }>({});
     const [requestWithdraws, setRequestWithdraws] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(false);
+    const [submitStatus, setSubmitStatus] = useState<"idle" | "processing" | "success" | "fail">("idle");
 
     const fetchRequestWithdraws = async () => {
         console.log("fetchRequestWithdraws");
@@ -140,7 +147,7 @@ function WithdrawForm({ recipient, setRecipient, amount, setAmount, onConfirm }:
         setRecipient(value);
     };
 
-    const handleConfirm = () => {
+    const handleConfirm = async () => {
         // Use current user's address if recipient is empty
         const finalRecipient = recipient || address;
 
@@ -153,7 +160,14 @@ function WithdrawForm({ recipient, setRecipient, amount, setAmount, onConfirm }:
             return;
         }
         setRecipientError("");
-        onConfirm();
+        setSubmitStatus("processing");
+        try {
+            await onConfirm();
+            setSubmitStatus("success");
+        } catch (e) {
+            setSubmitStatus("fail");
+        }
+        setTimeout(() => setSubmitStatus("idle"), 2000);
     };
 
     const toggleCard = (index: number) => {
@@ -265,6 +279,9 @@ function WithdrawForm({ recipient, setRecipient, amount, setAmount, onConfirm }:
             >
                 Confirm
             </button>
+            {submitStatus === "processing" && <div className="text-blue-600 text-center mt-2">Processing...</div>}
+            {submitStatus === "success" && <div className="text-green-600 text-center mt-2">Success!</div>}
+            {submitStatus === "fail" && <div className="text-red-600 text-center mt-2">Failed. Please try again.</div>}
             <div className="clear-both"></div>
         </>
     );
@@ -288,14 +305,13 @@ export default function Home() {
     console.log("Contract", contractAddress);
     const erc20_address = process.env.ERC20_CONTRACT || "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d";
     const rpcProvider = new RpcProvider({
-                nodeUrl: "https://starknet-sepolia.public.blastapi.io",
-            });
+        nodeUrl: "https://starknet-sepolia.public.blastapi.io",
+    });
 
     useEffect(() => {
         const fetchAbiAndContract = async () => {
             if (!account) return;
 
-          
             const { abi: vaultAbi } = await rpcProvider.getClassAt(contractAddress);
             if (!vaultAbi) return;
             const vaultContract = new Contract(vaultAbi, contractAddress, rpcProvider);
@@ -344,7 +360,6 @@ export default function Home() {
             setIsLoadingDeposit(true);
 
             console.log("Vault: ", vault);
-            
 
             const multiCall = await account.execute([
                 // Calling the first contract
