@@ -12,6 +12,11 @@ import Link from "next/link";
 import { axiosRequest } from "./hooks/axiosUtils";
 import { Skeleton } from "@radix-ui/themes";
 import { ExternalLink } from "lucide-react";
+import dotenv from "dotenv";
+dotenv.config()
+
+
+
 
 interface DepositFormProps {
     amount: string;
@@ -279,14 +284,18 @@ export default function Home() {
     const [vault, setVault] = useState<Contract | null>(null);
     const [token, setToken] = useState<Contract | null>(null);
 
+    const contractAddress = process.env.TULIP_CONTRACT || "0x0798905a42a75eef494ae3b5603848242ca3eec868303d67e4d5fab51b8717eb";
+    console.log("Contract", contractAddress);
+    const erc20_address = process.env.ERC20_CONTRACT || "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d";
+    const rpcProvider = new RpcProvider({
+                nodeUrl: "https://starknet-sepolia.public.blastapi.io",
+            });
+
     useEffect(() => {
         const fetchAbiAndContract = async () => {
             if (!account) return;
 
-            const rpcProvider = new RpcProvider({
-                nodeUrl: "https://starknet-sepolia.public.blastapi.io",
-            });
-            const contractAddress = "0x05f0f718e8ae8356b800001104e840ba2384e413f5b1567b55dc457c044a75d9";
+          
             const { abi: vaultAbi } = await rpcProvider.getClassAt(contractAddress);
             if (!vaultAbi) return;
             const vaultContract = new Contract(vaultAbi, contractAddress, rpcProvider);
@@ -295,7 +304,6 @@ export default function Home() {
             setAbi(vaultAbi as Abi);
             setVault(vaultContract);
 
-            const erc20_address = "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d";
             const { abi: tokenAbi } = await rpcProvider.getClassAt(erc20_address);
             if (!tokenAbi) return;
             const erc20 = new Contract(tokenAbi, erc20_address, rpcProvider);
@@ -336,23 +344,21 @@ export default function Home() {
             setIsLoadingDeposit(true);
 
             console.log("Vault: ", vault);
-            const rpcProvider = new RpcProvider({
-                nodeUrl: "https://starknet-sepolia.public.blastapi.io",
-            });
+            
 
             const multiCall = await account.execute([
                 // Calling the first contract
                 {
-                    contractAddress: "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d",
+                    contractAddress: erc20_address,
                     entrypoint: "approve",
                     // approve 1 wei for bridge
                     calldata: CallData.compile({
-                        spender: "0x05f0f718e8ae8356b800001104e840ba2384e413f5b1567b55dc457c044a75d9",
+                        spender: contractAddress,
                         amount: cairo.uint256(amount),
                     }),
                 },
                 {
-                    contractAddress: "0x05f0f718e8ae8356b800001104e840ba2384e413f5b1567b55dc457c044a75d9",
+                    contractAddress: contractAddress,
                     entrypoint: "deposit",
                     calldata: CallData.compile({
                         amount: cairo.uint256(amount),

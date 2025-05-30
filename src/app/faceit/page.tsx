@@ -48,7 +48,7 @@ export default function FundPage() {
             const rpcProvider = new RpcProvider({
                 nodeUrl: "https://starknet-sepolia.public.blastapi.io",
             });
-            const contractAddress = "0x00260b8006d33bf71c8504953874fc84d239ba954d22df3e1f742f1ff2c089bf";
+            const contractAddress = "0x004261931e12970f04713ce5beb82b73a6e36f0857985eb65230bab3fb6bdc47";
             const { abi: faceitAbi } = await rpcProvider.getClassAt(contractAddress);
             if (!faceitAbi) return;
             const faceitContract = new Contract(faceitAbi, contractAddress, rpcProvider);
@@ -117,13 +117,13 @@ export default function FundPage() {
                     entrypoint: "transfer",
                     calldata: CallData.compile({
                         recipient:
-                            "0x00260b8006d33bf71c8504953874fc84d239ba954d22df3e1f742f1ff2c089bf",
+                            "0x004261931e12970f04713ce5beb82b73a6e36f0857985eb65230bab3fb6bdc47",
                         amount: amountUint256,
                     }),
                 },
                 {
                     contractAddress:
-                        "0x00260b8006d33bf71c8504953874fc84d239ba954d22df3e1f742f1ff2c089bf",
+                        "0x004261931e12970f04713ce5beb82b73a6e36f0857985eb65230bab3fb6bdc47",
                     entrypoint: "raiseFund",
                     calldata: CallData.compile({
                         gameId: gameIdUint256,
