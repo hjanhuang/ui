@@ -2,11 +2,12 @@
 
 import React, { useEffect, useState } from "react";
 import { axiosRequest } from "../hooks/axiosUtils";
+import { API_BASE_URL } from "../config";
 
 interface GameInfo {
     _id: string;
     idGame: string;
-    Description: string;
+    description: string;
     host: string;
     isFinished: boolean;
     totalFund: string;
@@ -32,7 +33,7 @@ const GameList: React.FC = () => {
         try {
             const skip = (pageNum - 1) * PAGE_SIZE;
             const res = await axiosRequest({
-                url: `http://localhost:8000/game/all`,
+                url: `${API_BASE_URL}/game/all`,
                 method: "GET",
                 params: { skip, limit: PAGE_SIZE },
             });
@@ -171,7 +172,7 @@ const GameList: React.FC = () => {
                                                             <span className="font-semibold">Winner:</span> {game.winner ? game.winner : "-"}
                                                         </div>
                                                         <div>
-                                                            <span className="font-semibold">Description:</span> {game.Description || "-"}
+                                                            <span className="font-semibold">Description:</span> {game.description || "-"}
                                                         </div>
                                                     </div>
                                                 </td>

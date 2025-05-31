@@ -9,6 +9,7 @@ import { Copy } from "lucide-react";
 import Balance from "../components/balance";
 import { RpcProvider, Contract, constants, num, Abi, CallData, cairo, uint256 } from "starknet";
 import GameList from "../components/GameList";
+import { STARKNET_NODE_URL, FACEIT_CONTRACT, ERC20_CONTRACT, ConfigBackend, API_BASE_URL } from "../config";
 
 export default function FundPage() {
     //const { address } = useAccount();
@@ -35,7 +36,7 @@ export default function FundPage() {
     const { chain } = useNetwork();
 
     const rpcProvider = new RpcProvider({
-        nodeUrl: "https://starknet-sepolia.public.blastapi.io",
+        nodeUrl: STARKNET_NODE_URL,
     });
 
     const [abi, setAbi] = useState<Abi | undefined>();
@@ -49,10 +50,7 @@ export default function FundPage() {
         const fetchAbiAndContract = async () => {
             if (!account) return;
 
-            const rpcProvider = new RpcProvider({
-                nodeUrl: "https://starknet-sepolia.public.blastapi.io",
-            });
-            const contractAddress = "0x061102437939d300bcf494c00f55c4a60024cde4e9827fa692abb119c27053d8";
+            const contractAddress = FACEIT_CONTRACT;
             const { abi: faceitAbi } = await rpcProvider.getClassAt(contractAddress);
             if (!faceitAbi) return;
             const faceitContract = new Contract(faceitAbi, contractAddress, rpcProvider);
@@ -61,12 +59,11 @@ export default function FundPage() {
             setAbi(faceitAbi as Abi);
             setFaceit(faceitContract);
 
-            const erc20_address = "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d";
+            const erc20_address = ERC20_CONTRACT;
             const { abi: tokenAbi } = await rpcProvider.getClassAt(erc20_address);
             if (!tokenAbi) return;
             const erc20 = new Contract(tokenAbi, erc20_address, rpcProvider);
             erc20.connect(account);
-            console.log("erc20", erc20);
             setToken(erc20);
         };
 
@@ -118,15 +115,15 @@ export default function FundPage() {
                 const gameIdUint256 = uint256.bnToUint256(BigInt(gameId));
                 const multiCall = await account.execute([
                     {
-                        contractAddress: "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d",
+                        contractAddress: ERC20_CONTRACT,
                         entrypoint: "transfer",
                         calldata: CallData.compile({
-                            recipient: "0x061102437939d300bcf494c00f55c4a60024cde4e9827fa692abb119c27053d8",
+                            recipient: FACEIT_CONTRACT,
                             amount: amountUint256,
                         }),
                     },
                     {
-                        contractAddress: "0x061102437939d300bcf494c00f55c4a60024cde4e9827fa692abb119c27053d8",
+                        contractAddress: FACEIT_CONTRACT,
                         entrypoint: "raiseFund",
                         calldata: CallData.compile({
                             gameId: gameIdUint256,
@@ -200,7 +197,7 @@ export default function FundPage() {
         const PAGE_SIZE = 100;
         while (true) {
             const res = await axiosRequest({
-                url: "http://localhost:8000/game/all",
+                url: `${API_BASE_URL}/game/all`,
                 method: "GET",
                 params: { skip: (page - 1) * PAGE_SIZE, limit: PAGE_SIZE },
             });
@@ -226,7 +223,7 @@ export default function FundPage() {
         do {
             idGame = Math.floor(Math.random() * 1000000).toString();
         } while (existingIds.has(idGame));
-        
+
         const host = address || "";
         const { gameName, description } = gameForm;
         if (!address || !account) return;
@@ -242,7 +239,7 @@ export default function FundPage() {
         }
         try {
             const rpcProvider = new RpcProvider({
-                nodeUrl: "https://starknet-sepolia.public.blastapi.io",
+                nodeUrl: STARKNET_NODE_URL,
             });
 
             const myCall1 = faceit.populate("register", [idGame]);
@@ -266,7 +263,7 @@ export default function FundPage() {
             const txR = await rpcProvider.waitForTransaction(txH);
 
             const res = await axiosRequest({
-                url: "http://localhost:8000/game/register",
+                url: `${API_BASE_URL}/game/register`,
                 method: "POST",
                 data: { idGame, host, gameName, description } as any,
             });
